@@ -1,4 +1,8 @@
+import sql_structure
+
 sql_keywords=['create', 'update', 'select', 'join']
+
+
 
 def parse_sql(sql_string):
     None
