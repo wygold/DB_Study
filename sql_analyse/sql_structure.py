@@ -7,28 +7,47 @@ class SqlBlock:
     SQL_SET_OPERATORS = 'union|unionall|minus|intersect'
 
     original_sql_string = ''
+    pre_processed_sql_string = ''
 
     outer_sql_strings = []
-
     inner_sql_strings = []
-
     inner_sql_blocks = []
 
     def __init__(self, sql_string):
         self.original_sql_string = sql_string
+        self.outer_sql_strings = []
+        self.inner_sql_strings = []
+        self.inner_sql_blocks = []
+        self.initialize_sql_block()
 
     def initialize_sql_block(self):
+        self.pre_process_sql_block()
+
         self.breakdown_sql_by_brackets()
         self.breakdown_sql_by_set_operators()
 
-        print self.outer_sql_strings
-        print self.inner_sql_strings
+        for innersql in self.inner_sql_strings:
+            inner_sql_block = SqlBlock(innersql)
+            inner_sql_block = inner_sql_block.initialize_sql_block()
+            self.inner_sql_blocks.append(inner_sql_block)
+
+        return self
 
     def pre_process_sql_block(self):
-        # change the sql string to lower case
+        # remove extra whitespace between words
+        self.pre_processed_sql_string=" ".join(self.original_sql_string.split())
 
-        # change union all to union
-        None
+        # remove initial brackets if from upper level sql block
+        if self.pre_processed_sql_string[0] == self.LEFT_BRACKET and \
+            self.pre_processed_sql_string[-1] == self.RIGHT_BRACKET:
+            self.pre_processed_sql_string = self.pre_processed_sql_string[1:-1]
+
+        # change the original sql string to lower case
+        self.pre_processed_sql_string=str.lower(self.pre_processed_sql_string)
+
+        # change union all to unionall for original sql string
+        # for word in original_sql_string
+        self.pre_processed_sql_string.replace('union all', 'unionall')
 
     def breakdown_sql_by_brackets(self):
         # to break down the original SQL by brackets
@@ -37,7 +56,7 @@ class SqlBlock:
         current_inner_sql = ''
         left_bracket_counter = 0
 
-        for char in self.original_sql_string:
+        for char in self.pre_processed_sql_string:
             if char <> self.LEFT_BRACKET and char <> self.RIGHT_BRACKET and left_bracket_counter ==0:
                 current_outer_sql = current_outer_sql + char
             elif char <> self.LEFT_BRACKET and char <> self.RIGHT_BRACKET and left_bracket_counter > 0:
@@ -111,6 +130,3 @@ class SqlBlock:
                 local_inner_sql_strings.append(current_inner_sql)
             self.outer_sql_strings = ''
             self.inner_sql_strings = local_inner_sql_strings
-
-d=SqlBlock('select (a) (b)  bb  union (asfd)  (asfd)maaa')
-d.initialize_sql_block()
