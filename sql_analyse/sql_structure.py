@@ -4,7 +4,10 @@ class SqlBlock:
     # static variables
     LEFT_BRACKET = '('
     RIGHT_BRACKET = ')'
+    SPACE = ' '
+
     SQL_SET_OPERATORS = 'union|unionall|minus|intersect'
+    SQL_KEY_WORDS = ''
 
     original_sql_string = ''
     pre_processed_sql_string = ''
@@ -13,6 +16,8 @@ class SqlBlock:
     inner_sql_strings = []
     inner_sql_blocks = []
 
+    outer_tables = dict()
+
     def __init__(self, sql_string):
         self.original_sql_string = sql_string
         self.outer_sql_strings = []
@@ -20,15 +25,20 @@ class SqlBlock:
         self.inner_sql_blocks = []
         self.initialize_sql_block()
 
-    def initialize_sql_block(self):
+    def initialize_sql_block(self, outer_tables = dict()):
+
+        self.outer_tables = outer_tables
+
         self.pre_process_sql_block()
 
         self.breakdown_sql_by_brackets()
         self.breakdown_sql_by_set_operators()
 
+        self.parse_table_name_and_alias()
+
         for innersql in self.inner_sql_strings:
             inner_sql_block = SqlBlock(innersql)
-            inner_sql_block = inner_sql_block.initialize_sql_block()
+            inner_sql_block = inner_sql_block.initialize_sql_block(self.outer_tables)
             self.inner_sql_blocks.append(inner_sql_block)
 
         return self
@@ -47,7 +57,10 @@ class SqlBlock:
 
         # change union all to unionall for original sql string
         # for word in original_sql_string
-        self.pre_processed_sql_string.replace('union all', 'unionall')
+        self.pre_processed_sql_string = self.pre_processed_sql_string.replace('union all', 'unionall')
+
+        # add a space before and after comma
+        self.pre_processed_sql_string = self.pre_processed_sql_string.replace(',', ' , ')
 
     def breakdown_sql_by_brackets(self):
         # to break down the original SQL by brackets
@@ -130,3 +143,49 @@ class SqlBlock:
                 local_inner_sql_strings.append(current_inner_sql)
             self.outer_sql_strings = ''
             self.inner_sql_strings = local_inner_sql_strings
+
+    def parse_table_name_and_alias(self):
+        # 1. search from table dictionary
+        # 2. use logic to find table name
+        # implement 2 first
+        TABLE_NAME_START_KEYS = ['from','join']
+        TABLE_NAME_SPLIT_KEYS = [',']
+        TABLE_NAME_END_KEYS = ['join','where', 'on']
+
+        parse_table_name_flag = False
+
+        table_names = []
+        raw_table_name = ''
+
+        for outer_sql_string in self.outer_sql_strings:
+            for word in str.split(outer_sql_string):
+                if word in TABLE_NAME_START_KEYS:
+                    parse_table_name_flag = True
+                elif parse_table_name_flag and word not in TABLE_NAME_SPLIT_KEYS:
+                    if raw_table_name != '':
+                        raw_table_name += ' ' + word
+                    else:
+                        raw_table_name = word
+                elif parse_table_name_flag and word in TABLE_NAME_SPLIT_KEYS:
+                    table_names.append(raw_table_name)
+                    raw_table_name = ''
+                elif parse_table_name_flag and word in TABLE_NAME_END_KEYS:
+                    table_names.append(raw_table_name)
+                    raw_table_name = ''
+                    parse_table_name_flag = False
+
+        # for leftover in raw_table_name add to table names
+        if parse_table_name_flag and raw_table_name != '':
+            table_names.append(raw_table_name)
+
+        for table_description in table_names:
+            table_name = str.split(table_description)[0]
+
+            if len(str.split(table_description)) > 1:
+                table_alias = str.split(table_description)[1]
+                self.outer_tables[table_alias] = table_name
+            else:
+                self.outer_tables[table_name] = table_name
+
+    def parse_table_relation(self):
+        None
