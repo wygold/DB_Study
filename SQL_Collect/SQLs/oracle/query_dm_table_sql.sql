@@ -1,0 +1,7 @@
+select
+trim(A.M_LABEL) as LABEL,
+DMSQL.M_REQUEST as M_REQUEST
+--utl_raw.cast_to_varchar2(dbms_lob.substr(DMSQL.M_REQUEST, 2000))
+from RPO_DMSETUP_TABLE_DBF A
+left outer join RPO_DMSETUP_SQL_TABLE_DBF DMSQL on A.M_REFERENCE=DMSQL.M_REFERENCE
+where A.M_TYPE=4

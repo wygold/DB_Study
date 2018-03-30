@@ -43,7 +43,7 @@ class Table:
         if descritption <> '':
             self.descritpion = descritption
 
-    def addtablefield(self,name, length, datatype, is_index, is_nullable):
+    def addtablefield(self, name, length, datatype, is_index, is_nullable):
 
         if self.tablefields.has_key(name):
             return False

@@ -1,0 +1,10 @@
+select
+REQXTR.M_LABEL as LABEL,
+M_REQUEST
+--utl_raw.cast_to_varchar2(dbms_lob.substr(M_REQUEST, 2000))
+from ACT_BAT_DBF BAT, ACT_EXTR_DBF XTR, ACT_REQXTR_DBF REQXTR
+where 1=1
+and BAT.M_REF = XTR.M_REF_BATCH
+and BAT.M_EXECTX = 7
+and XTR.M_REF_REQ = REQXTR.M_REF
+order by REQXTR.M_LABEL

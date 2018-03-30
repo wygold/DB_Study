@@ -1,17 +1,16 @@
-import sql_structure
+from table import Table
 
-sql_keywords=['create', 'update', 'select', 'join']
+class TableRelationship:
+    table1 = Table()
+    table2 = Table()
+    relation = ()
+
+    def __init__(self, table1, table2):
+        self.table1 = table1
+        self.table2 = table2
 
 
+    def add_relationship(self, table1, table2, field1, field2):
+        pass
 
-def parse_sql(sql_string):
-    None
 
-def get_table_name(sql_string, layer):
-    None
-
-def get_table_alias(sql_string, layer):
-    None
-
-def get_table_connection(sql_string, layer):
-    None
